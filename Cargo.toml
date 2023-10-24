@@ -1,0 +1,43 @@
+[package]
+authors = ["Victor Berger <victor.berger@m4x.org>", "Drakulix (Victoria Brekenfeld)"]
+edition = "2021"
+license = "MIT"
+name = "trinkhalle"
+publish = false
+version = "0.0.1"
+
+[dependencies]
+bitflags = "2.2.1"
+fps_ticker = {version = "1.0.0", optional = true}
+image = {version = "0.24.0", default-features = false, optional = true}
+rand = "0.8"
+tracing = { version = "0.1.37", features = ["max_level_trace", "release_max_level_debug"] }
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+thiserror = "1"
+xcursor = {version = "0.3.3"}
+xkbcommon = "0.6.0"
+renderdoc = {version = "0.11.0", optional = true}
+smithay-drm-extras = { git = "https://github.com/Smithay/smithay.git"}
+puffin_http = { version = "0.13", optional = true }
+profiling = { version = "1.0" }
+
+[dependencies.smithay]
+git = "https://github.com/Smithay/smithay.git"
+default-features = false
+features = [
+    "backend_winit",
+    "wayland_frontend",
+    "desktop",
+    "backend_session_libseat",
+    "backend_drm",
+    "renderer_multi",
+    "renderer_glow",
+    "backend_gbm",
+    "backend_udev",
+    "backend_libinput",
+    "use_system_lib",
+]
+
+[features]
+default = []
+debug = ["fps_ticker", "image/png", "renderdoc"]
