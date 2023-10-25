@@ -40,7 +40,7 @@ use crate::{
 
 mod element;
 mod grabs;
-pub(crate) mod ssd;
+// pub(crate) mod ssd;
 mod xdg;
 
 pub use self::element::*;
