@@ -11,11 +11,15 @@ use smithay::{
         },
         ImportAll, ImportMem, Renderer,
     },
-    desktop::space::{
-        constrain_space_element, ConstrainBehavior, ConstrainReference, Space, SpaceRenderElements,
+    desktop::{
+        layer_map_for_output,
+        space::{
+            constrain_space_element, ConstrainBehavior, ConstrainReference, Space,
+            SpaceRenderElements,
+        },
     },
     output::Output,
-    utils::{Point, Rectangle, Size},
+    utils::{Point, Rectangle, Scale, Size},
 };
 
 #[cfg(feature = "debug")]
@@ -80,7 +84,8 @@ pub fn space_preview_elements<'a, R, C>(
 where
     R: Renderer + ImportAll + ImportMem,
     R::TextureId: Clone + 'static,
-    C: From<CropRenderElement<RelocateRenderElement<RescaleRenderElement<WindowRenderElement<R>>>>> + 'a,
+    C: From<CropRenderElement<RelocateRenderElement<RescaleRenderElement<WindowRenderElement<R>>>>>
+        + 'a,
 {
     let constrain_behavior = ConstrainBehavior {
         reference: ConstrainReference::BoundingBox,
@@ -203,7 +208,12 @@ where
     R: Renderer + ImportAll + ImportMem,
     R::TextureId: Clone + 'static,
 {
-    let (elements, clear_color) =
-        output_elements(output, space, custom_elements, renderer, show_window_preview);
+    let (elements, clear_color) = output_elements(
+        output,
+        space,
+        custom_elements,
+        renderer,
+        show_window_preview,
+    );
     damage_tracker.render_output(renderer, age, &elements, clear_color)
 }

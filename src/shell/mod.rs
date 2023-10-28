@@ -3,8 +3,8 @@ use std::cell::RefCell;
 use smithay::{
     backend::renderer::utils::on_commit_buffer_handler,
     desktop::{
-        layer_map_for_output, space::SpaceElement, LayerSurface, PopupKind, PopupManager, Space,
-        WindowSurfaceType,
+        layer_map_for_output, space::SpaceElement, LayerMap, LayerSurface, PopupKind, PopupManager,
+        Space, WindowSurfaceType,
     },
     output::Output,
     reexports::{
@@ -32,6 +32,7 @@ use smithay::{
         },
     },
 };
+use tracing::info;
 
 use crate::{
     state::{AnvilState, Backend},
@@ -148,7 +149,7 @@ impl<BackendData: Backend> CompositorHandler for AnvilState<BackendData> {
         }
         self.popups.commit(surface);
 
-        ensure_initial_configure(surface, &self.space, &mut self.popups)
+        ensure_initial_configure(surface, &mut self.space, &mut self.popups)
     }
 }
 
@@ -164,25 +165,31 @@ impl<BackendData: Backend> WlrLayerShellHandler for AnvilState<BackendData> {
         _layer: Layer,
         namespace: String,
     ) {
+        info!("new layer surface. our space: {:?}", self.space);
         let output = wl_output
             .as_ref()
             .and_then(Output::from_resource)
             .unwrap_or_else(|| self.space.outputs().next().unwrap().clone());
-        let mut map = layer_map_for_output(&output);
-        map.map_layer(&LayerSurface::new(surface, namespace))
-            .unwrap();
+        {
+            let mut map = layer_map_for_output(&output);
+            map.map_layer(&LayerSurface::new(surface, namespace))
+                .unwrap();
+        }
+
+        //fixup_positions(&mut self.space, Point::from((0f64, 0f64)));
     }
 
     fn layer_destroyed(&mut self, surface: WlrLayerSurface) {
-        if let Some((mut map, layer)) = self.space.outputs().find_map(|o| {
+        if let Some((mut map, layer, output)) = self.space.outputs().find_map(|o| {
             let map = layer_map_for_output(o);
             let layer = map
                 .layers()
                 .find(|&layer| layer.layer_surface() == &surface)
                 .cloned();
-            layer.map(|layer| (map, layer))
+            layer.map(|layer| (map, layer, o))
         }) {
             map.unmap_layer(&layer);
+            resize_toplevel_windows(&self.space, &map, output)
         }
     }
 }
@@ -204,9 +211,10 @@ pub struct SurfaceData {
 
 fn ensure_initial_configure(
     surface: &WlSurface,
-    space: &Space<WindowElement>,
+    space: &mut Space<WindowElement>,
     popups: &mut PopupManager,
 ) {
+    info!("ensure_initial_configure");
     with_surface_tree_upward(
         surface,
         (),
@@ -225,7 +233,7 @@ fn ensure_initial_configure(
         .cloned()
     {
         // send the initial configure if relevant
-        #[cfg_attr(not(feature = "xwayland"), allow(irrefutable_let_patterns))]
+        #[allow(irrefutable_let_patterns)]
         if let WindowElement::Wayland(ref toplevel) = window {
             let initial_configure_sent = with_states(surface, |states| {
                 states
@@ -306,6 +314,9 @@ fn ensure_initial_configure(
         map.arrange();
         // send the initial configure if relevant
         if !initial_configure_sent {
+            resize_toplevel_windows(space, &map, output);
+            info!("send_configure");
+
             let layer = map
                 .layer_for_surface(surface, WindowSurfaceType::TOPLEVEL)
                 .unwrap();
@@ -315,16 +326,29 @@ fn ensure_initial_configure(
     };
 }
 
+fn resize_toplevel_windows(space: &Space<WindowElement>, map: &LayerMap, output: &Output) {
+    let geo = space.output_geometry(&output).unwrap();
+    let zone = map.non_exclusive_zone();
+    let rect = Rectangle::from_loc_and_size(geo.loc + zone.loc, zone.size);
+    space.elements_for_output(output).for_each(|window| {
+        #[allow(irrefutable_let_patterns)]
+        if let WindowElement::Wayland(ref toplevel) = window {
+            toplevel.toplevel().with_pending_state(|state| {
+                state.bounds = Some(rect.size);
+                state.size = Some(rect.size);
+            });
+            toplevel.toplevel().send_configure();
+        }
+    });
+}
+
 fn place_new_window(
     space: &mut Space<WindowElement>,
     pointer_location: Point<f64, Logical>,
     window: &WindowElement,
     activate: bool,
 ) {
-    // place the window at a random location on same output as pointer
-    // or if there is not output in a [0;800]x[0;800] square
-    use rand::distributions::{Distribution, Uniform};
-
+    info!("new window");
     let output = space
         .output_under(pointer_location)
         .next()
@@ -344,21 +368,42 @@ fn place_new_window(
     if let WindowElement::Wayland(window) = window {
         window.toplevel().with_pending_state(|state| {
             state.bounds = Some(output_geometry.size);
+            state.size = Some(output_geometry.size);
         });
     }
+    space.map_element(
+        window.clone(),
+        (output_geometry.loc.x, output_geometry.loc.y),
+        activate,
+    );
+}
 
-    let max_x = output_geometry.loc.x + (((output_geometry.size.w as f32) / 3.0) * 2.0) as i32;
-    let max_y = output_geometry.loc.y + (((output_geometry.size.h as f32) / 3.0) * 2.0) as i32;
-    let x_range = Uniform::new(output_geometry.loc.x, max_x);
-    let y_range = Uniform::new(output_geometry.loc.y, max_y);
-    let mut rng = rand::thread_rng();
-    let x = x_range.sample(&mut rng);
-    let y = y_range.sample(&mut rng);
-
-    space.map_element(window.clone(), (x, y), activate);
+pub fn fixup_window_positions(space: &mut Space<WindowElement>, output: &Output) {
+    let window_geometries = space
+        .elements_for_output(output)
+        .map(|window| {
+            let output_geometry = {
+                let geo = space.output_geometry(&output).unwrap();
+                let map = layer_map_for_output(&output);
+                let zone = map.non_exclusive_zone();
+                Rectangle::from_loc_and_size(geo.loc + zone.loc, zone.size)
+            };
+            info!("output_geometry: {:?}", output_geometry);
+            // set the initial toplevel bounds
+            #[allow(irrefutable_let_patterns)]
+            if let WindowElement::Wayland(window) = window {
+                window.toplevel().with_pending_state(|state| {
+                    state.bounds = Some(output_geometry.size);
+                    state.size = Some(output_geometry.size);
+                });
+            }
+            (window.clone(), output_geometry.loc)
+        })
+        .collect::<Vec<_>>();
 }
 
 pub fn fixup_positions(space: &mut Space<WindowElement>, pointer_location: Point<f64, Logical>) {
+    info!("fixi");
     // fixup outputs
     let mut offset = Point::<i32, Logical>::from((0, 0));
     for output in space.outputs().cloned().collect::<Vec<_>>().into_iter() {
