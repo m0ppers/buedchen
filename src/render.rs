@@ -21,6 +21,7 @@ use smithay::{
     output::Output,
     utils::{Point, Rectangle, Scale, Size},
 };
+use tracing::info;
 
 #[cfg(feature = "debug")]
 use crate::drawing::FpsElement;
@@ -147,7 +148,10 @@ pub fn output_elements<R>(
     custom_elements: impl IntoIterator<Item = CustomRenderElements<R>>,
     renderer: &mut R,
     show_window_preview: bool,
-) -> (Vec<OutputRenderElements<R, WindowRenderElement<R>>>, [f32; 4])
+) -> (
+    Vec<OutputRenderElements<R, WindowRenderElement<R>>>,
+    [f32; 4],
+)
 where
     R: Renderer + ImportAll + ImportMem,
     R::TextureId: Clone + 'static,
@@ -161,11 +165,38 @@ where
         let window_render_elements: Vec<WindowRenderElement<R>> =
             AsRenderElements::<R>::render_elements(&window, renderer, (0, 0).into(), scale, 1.0);
 
+        // probably not ordered correctly but does the job for now
+        let layer_map = layer_map_for_output(output);
+        let layer_render_elements: Vec<WindowRenderElement<R>> = layer_map
+            .layers()
+            .filter_map(|surface| {
+                layer_map
+                    .layer_geometry(surface)
+                    .map(|geo| (geo.loc, surface))
+            })
+            .flat_map(|(loc, surface)| {
+                AsRenderElements::<R>::render_elements::<WaylandSurfaceRenderElement<R>>(
+                    surface,
+                    renderer,
+                    loc.to_physical_precise_round(scale),
+                    scale,
+                    1.0,
+                )
+                .into_iter()
+                .map(WindowRenderElement::from)
+            })
+            .collect();
+
         let elements = custom_elements
             .into_iter()
             .map(OutputRenderElements::from)
             .chain(
                 window_render_elements
+                    .into_iter()
+                    .map(|e| OutputRenderElements::Window(Wrap::from(e))),
+            )
+            .chain(
+                layer_render_elements
                     .into_iter()
                     .map(|e| OutputRenderElements::Window(Wrap::from(e))),
             )
