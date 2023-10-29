@@ -345,13 +345,7 @@ impl<BackendData: Backend> AnvilState<BackendData> {
         let layers = layer_map_for_output(output);
 
         let mut under = None;
-        if let Some(window) = output
-            .user_data()
-            .get::<FullscreenSurface>()
-            .and_then(|f| f.get())
-        {
-            under = Some((window.into(), output_geo.loc));
-        } else if let Some(layer) = layers
+        if let Some(layer) = layers
             .layer_under(WlrLayer::Overlay, pos)
             .or_else(|| layers.layer_under(WlrLayer::Top, pos))
         {

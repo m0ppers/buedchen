@@ -32,7 +32,7 @@ use smithay::{
         },
     },
 };
-use tracing::info;
+use tracing::{debug, info};
 
 use crate::{
     state::{AnvilState, Backend},
@@ -165,7 +165,7 @@ impl<BackendData: Backend> WlrLayerShellHandler for AnvilState<BackendData> {
         _layer: Layer,
         namespace: String,
     ) {
-        info!("new layer surface. our space: {:?}", self.space);
+        debug!("new layer surface");
         let output = wl_output
             .as_ref()
             .and_then(Output::from_resource)
@@ -180,6 +180,7 @@ impl<BackendData: Backend> WlrLayerShellHandler for AnvilState<BackendData> {
     }
 
     fn layer_destroyed(&mut self, surface: WlrLayerSurface) {
+        debug!("layer destroyed");
         if let Some((mut map, layer, output)) = self.space.outputs().find_map(|o| {
             let map = layer_map_for_output(o);
             let layer = map
