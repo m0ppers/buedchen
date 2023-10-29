@@ -35,7 +35,7 @@ use smithay::{
 use tracing::{debug, info};
 
 use crate::{
-    state::{AnvilState, Backend},
+    state::{Backend, BuedchenState},
     ClientState,
 };
 
@@ -89,11 +89,11 @@ impl FullscreenSurface {
     }
 }
 
-impl<BackendData: Backend> BufferHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> BufferHandler for BuedchenState<BackendData> {
     fn buffer_destroyed(&mut self, _buffer: &WlBuffer) {}
 }
 
-impl<BackendData: Backend> CompositorHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> CompositorHandler for BuedchenState<BackendData> {
     fn compositor_state(&mut self) -> &mut CompositorState {
         &mut self.compositor_state
     }
@@ -153,7 +153,7 @@ impl<BackendData: Backend> CompositorHandler for AnvilState<BackendData> {
     }
 }
 
-impl<BackendData: Backend> WlrLayerShellHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> WlrLayerShellHandler for BuedchenState<BackendData> {
     fn shell_state(&mut self) -> &mut WlrLayerShellState {
         &mut self.layer_shell_state
     }
@@ -195,7 +195,7 @@ impl<BackendData: Backend> WlrLayerShellHandler for AnvilState<BackendData> {
     }
 }
 
-impl<BackendData: Backend> AnvilState<BackendData> {
+impl<BackendData: Backend> BuedchenState<BackendData> {
     pub fn window_for_surface(&self, surface: &WlSurface) -> Option<WindowElement> {
         self.space
             .elements()

@@ -28,7 +28,7 @@ use tracing::{debug, trace, warn};
 
 use crate::{
     focus::FocusTarget,
-    state::{AnvilState, Backend},
+    state::{Backend, BuedchenState},
 };
 
 use super::{
@@ -36,7 +36,7 @@ use super::{
     ResizeState, ResizeSurfaceGrab, SurfaceData, WindowElement,
 };
 
-impl<BackendData: Backend> XdgShellHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> XdgShellHandler for BuedchenState<BackendData> {
     fn xdg_shell_state(&mut self) -> &mut XdgShellState {
         &mut self.xdg_shell_state
     }
@@ -92,7 +92,7 @@ impl<BackendData: Backend> XdgShellHandler for AnvilState<BackendData> {
     }
 
     fn move_request(&mut self, surface: ToplevelSurface, seat: wl_seat::WlSeat, serial: Serial) {
-        let seat: Seat<AnvilState<BackendData>> = Seat::from_resource(&seat).unwrap();
+        let seat: Seat<BuedchenState<BackendData>> = Seat::from_resource(&seat).unwrap();
         self.move_request_xdg(&surface, &seat, serial)
     }
 
@@ -103,7 +103,7 @@ impl<BackendData: Backend> XdgShellHandler for AnvilState<BackendData> {
         serial: Serial,
         edges: xdg_toplevel::ResizeEdge,
     ) {
-        let seat: Seat<AnvilState<BackendData>> = Seat::from_resource(&seat).unwrap();
+        let seat: Seat<BuedchenState<BackendData>> = Seat::from_resource(&seat).unwrap();
         // TODO: touch resize.
         let pointer = seat.get_pointer().unwrap();
 
@@ -341,7 +341,7 @@ impl<BackendData: Backend> XdgShellHandler for AnvilState<BackendData> {
     }
 
     fn grab(&mut self, surface: PopupSurface, seat: wl_seat::WlSeat, serial: Serial) {
-        let seat: Seat<AnvilState<BackendData>> = Seat::from_resource(&seat).unwrap();
+        let seat: Seat<BuedchenState<BackendData>> = Seat::from_resource(&seat).unwrap();
         let kind = PopupKind::Xdg(surface);
         if let Some(root) = find_popup_root_surface(&kind).ok().and_then(|root| {
             self.space
@@ -390,7 +390,7 @@ impl<BackendData: Backend> XdgShellHandler for AnvilState<BackendData> {
     }
 }
 
-impl<BackendData: Backend> AnvilState<BackendData> {
+impl<BackendData: Backend> BuedchenState<BackendData> {
     pub fn move_request_xdg(
         &mut self,
         surface: &ToplevelSurface,

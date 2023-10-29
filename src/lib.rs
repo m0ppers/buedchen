@@ -11,4 +11,4 @@ pub mod state;
 pub mod udev;
 pub mod winit;
 
-pub use state::{AnvilState, CalloopData, ClientState};
+pub use state::{BuedchenState, CalloopData, ClientState};

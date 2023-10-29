@@ -1,7 +1,7 @@
-# Anvil
+# buedchen
 
-A compositor used as a testing ground for new smithay features.
-For a simple example compositor consider reading [smallvil](https://github.com/Smithay/smithay/tree/master/smallvil)
+A work in progress wayland only compositor that implements a fullscreen shell for kiosk systems. Based on smithay. Mostly a fork of anvil.
+Supports `wlr_layer_shell` so a virtual keyboard might be attached for tablet use.
 
 ## Dependencies
 
@@ -27,14 +27,11 @@ then you'll need to install the following packages as well:
 You can run it with cargo after having cloned this repository:
 
 ```
-cd anvil;
-
 cargo run -- --{backend}
 ```
 
 The currently available backends are:
 
-- `--x11`: start anvil as an X11 client. This allows you to run the compositor inside an X11 session or any compositor supporting XWayland. Should be preferred over the winit backend where possible.
 - `--winit`: start anvil as a [Winit](https://github.com/tomaka/winit) application. This allows you to run it
   inside of an other X11 or Wayland session.
 - `--tty-udev`: start anvil in a tty with udev support. This is the "traditional" launch of a Wayland

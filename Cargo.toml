@@ -2,7 +2,7 @@
 authors = ["Victor Berger <victor.berger@m4x.org>", "Drakulix (Victoria Brekenfeld)"]
 edition = "2021"
 license = "MIT"
-name = "trinkhalle"
+name = "buedchen"
 publish = false
 version = "0.0.1"
 

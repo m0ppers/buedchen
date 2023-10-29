@@ -100,7 +100,7 @@ use smithay::{
 use crate::{focus::FocusTarget, shell::WindowElement};
 
 pub struct CalloopData<BackendData: Backend + 'static> {
-    pub state: AnvilState<BackendData>,
+    pub state: BuedchenState<BackendData>,
     pub display_handle: DisplayHandle,
 }
 
@@ -117,7 +117,7 @@ impl ClientData for ClientState {
 }
 
 #[derive(Debug)]
-pub struct AnvilState<BackendData: Backend + 'static> {
+pub struct BuedchenState<BackendData: Backend + 'static> {
     pub backend_data: BackendData,
     pub socket_name: Option<String>,
     pub display_handle: DisplayHandle,
@@ -135,7 +135,7 @@ pub struct AnvilState<BackendData: Backend + 'static> {
     pub output_manager_state: OutputManagerState,
     pub primary_selection_state: PrimarySelectionState,
     pub data_control_state: DataControlState,
-    pub seat_state: SeatState<AnvilState<BackendData>>,
+    pub seat_state: SeatState<BuedchenState<BackendData>>,
     pub keyboard_shortcuts_inhibit_state: KeyboardShortcutsInhibitState,
     pub shm_state: ShmState,
     pub viewporter_state: ViewporterState,
@@ -151,9 +151,9 @@ pub struct AnvilState<BackendData: Backend + 'static> {
     pub suppressed_keys: Vec<Keysym>,
     pub cursor_status: Arc<Mutex<CursorImageStatus>>,
     pub seat_name: String,
-    pub seat: Seat<AnvilState<BackendData>>,
+    pub seat: Seat<BuedchenState<BackendData>>,
     pub clock: Clock<Monotonic>,
-    pub pointer: PointerHandle<AnvilState<BackendData>>,
+    pub pointer: PointerHandle<BuedchenState<BackendData>>,
 
     #[cfg(feature = "debug")]
     pub renderdoc: Option<renderdoc::RenderDoc<renderdoc::V141>>,
@@ -161,15 +161,15 @@ pub struct AnvilState<BackendData: Backend + 'static> {
     pub show_window_preview: bool,
 }
 
-delegate_compositor!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_compositor!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> DataDeviceHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> DataDeviceHandler for BuedchenState<BackendData> {
     fn data_device_state(&self) -> &DataDeviceState {
         &self.data_device_state
     }
 }
 
-impl<BackendData: Backend> ClientDndGrabHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> ClientDndGrabHandler for BuedchenState<BackendData> {
     fn started(
         &mut self,
         _source: Option<WlDataSource>,
@@ -182,46 +182,46 @@ impl<BackendData: Backend> ClientDndGrabHandler for AnvilState<BackendData> {
         self.dnd_icon = None;
     }
 }
-impl<BackendData: Backend> ServerDndGrabHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> ServerDndGrabHandler for BuedchenState<BackendData> {
     fn send(&mut self, _mime_type: String, _fd: OwnedFd, _seat: Seat<Self>) {
         unreachable!("Anvil doesn't do server-side grabs");
     }
 }
-delegate_data_device!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_data_device!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-delegate_output!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_output!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> SelectionHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> SelectionHandler for BuedchenState<BackendData> {
     type SelectionUserData = ();
 }
 
-impl<BackendData: Backend> PrimarySelectionHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> PrimarySelectionHandler for BuedchenState<BackendData> {
     fn primary_selection_state(&self) -> &PrimarySelectionState {
         &self.primary_selection_state
     }
 }
-delegate_primary_selection!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_primary_selection!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> DataControlHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> DataControlHandler for BuedchenState<BackendData> {
     fn data_control_state(&self) -> &DataControlState {
         &self.data_control_state
     }
 }
 
-delegate_data_control!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_data_control!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> ShmHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> ShmHandler for BuedchenState<BackendData> {
     fn shm_state(&self) -> &ShmState {
         &self.shm_state
     }
 }
-delegate_shm!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_shm!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> SeatHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> SeatHandler for BuedchenState<BackendData> {
     type KeyboardFocus = FocusTarget;
     type PointerFocus = FocusTarget;
 
-    fn seat_state(&mut self) -> &mut SeatState<AnvilState<BackendData>> {
+    fn seat_state(&mut self) -> &mut SeatState<BuedchenState<BackendData>> {
         &mut self.seat_state
     }
 
@@ -238,13 +238,13 @@ impl<BackendData: Backend> SeatHandler for AnvilState<BackendData> {
         *self.cursor_status.lock().unwrap() = image;
     }
 }
-delegate_seat!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_seat!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-delegate_tablet_manager!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_tablet_manager!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-delegate_text_input_manager!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_text_input_manager!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> InputMethodHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> InputMethodHandler for BuedchenState<BackendData> {
     fn new_popup(&mut self, surface: PopupSurface) {
         if let Err(err) = self.popups.track_popup(PopupKind::from(surface)) {
             warn!("Failed to track popup: {}", err);
@@ -267,9 +267,9 @@ impl<BackendData: Backend> InputMethodHandler for AnvilState<BackendData> {
     }
 }
 
-delegate_input_method_manager!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_input_method_manager!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> KeyboardShortcutsInhibitHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> KeyboardShortcutsInhibitHandler for BuedchenState<BackendData> {
     fn keyboard_shortcuts_inhibit_state(&mut self) -> &mut KeyboardShortcutsInhibitState {
         &mut self.keyboard_shortcuts_inhibit_state
     }
@@ -280,15 +280,15 @@ impl<BackendData: Backend> KeyboardShortcutsInhibitHandler for AnvilState<Backen
     }
 }
 
-delegate_keyboard_shortcuts_inhibit!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_keyboard_shortcuts_inhibit!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-delegate_virtual_keyboard_manager!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_virtual_keyboard_manager!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-delegate_pointer_gestures!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_pointer_gestures!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-delegate_relative_pointer!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_relative_pointer!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> PointerConstraintsHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> PointerConstraintsHandler for BuedchenState<BackendData> {
     fn new_constraint(&mut self, surface: &WlSurface, pointer: &PointerHandle<Self>) {
         // XXX region
         if pointer
@@ -303,11 +303,11 @@ impl<BackendData: Backend> PointerConstraintsHandler for AnvilState<BackendData>
         }
     }
 }
-delegate_pointer_constraints!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_pointer_constraints!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-delegate_viewporter!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_viewporter!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> XdgActivationHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> XdgActivationHandler for BuedchenState<BackendData> {
     fn activation_state(&mut self) -> &mut XdgActivationState {
         &mut self.xdg_activation_state
     }
@@ -343,9 +343,9 @@ impl<BackendData: Backend> XdgActivationHandler for AnvilState<BackendData> {
         // The request is cancelled
     }
 }
-delegate_xdg_activation!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_xdg_activation!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> XdgDecorationHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> XdgDecorationHandler for BuedchenState<BackendData> {
     fn new_decoration(&mut self, toplevel: ToplevelSurface) {
         use xdg_decoration::zv1::server::zxdg_toplevel_decoration_v1::Mode;
         // Set the default to client side
@@ -395,13 +395,13 @@ impl<BackendData: Backend> XdgDecorationHandler for AnvilState<BackendData> {
         }
     }
 }
-delegate_xdg_decoration!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_xdg_decoration!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-delegate_xdg_shell!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
-delegate_layer_shell!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
-delegate_presentation!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_xdg_shell!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
+delegate_layer_shell!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
+delegate_presentation!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend> FractionalScaleHandler for AnvilState<BackendData> {
+impl<BackendData: Backend> FractionalScaleHandler for BuedchenState<BackendData> {
     fn new_fractional_scale(
         &mut self,
         surface: smithay::reexports::wayland_server::protocol::wl_surface::WlSurface,
@@ -449,9 +449,9 @@ impl<BackendData: Backend> FractionalScaleHandler for AnvilState<BackendData> {
         });
     }
 }
-delegate_fractional_scale!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_fractional_scale!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend + 'static> SecurityContextHandler for AnvilState<BackendData> {
+impl<BackendData: Backend + 'static> SecurityContextHandler for BuedchenState<BackendData> {
     fn context_created(
         &mut self,
         source: SecurityContextListenerSource,
@@ -473,15 +473,15 @@ impl<BackendData: Backend + 'static> SecurityContextHandler for AnvilState<Backe
             .expect("Failed to init wayland socket source");
     }
 }
-delegate_security_context!(@<BackendData: Backend + 'static> AnvilState<BackendData>);
+delegate_security_context!(@<BackendData: Backend + 'static> BuedchenState<BackendData>);
 
-impl<BackendData: Backend + 'static> AnvilState<BackendData> {
+impl<BackendData: Backend + 'static> BuedchenState<BackendData> {
     pub fn init(
-        display: Display<AnvilState<BackendData>>,
+        display: Display<BuedchenState<BackendData>>,
         handle: LoopHandle<'static, CalloopData<BackendData>>,
         backend_data: BackendData,
         listen_on_socket: bool,
-    ) -> AnvilState<BackendData> {
+    ) -> BuedchenState<BackendData> {
         let dh = display.handle();
 
         let clock = Clock::new();
@@ -570,7 +570,7 @@ impl<BackendData: Backend + 'static> AnvilState<BackendData> {
 
         let keyboard_shortcuts_inhibit_state = KeyboardShortcutsInhibitState::new::<Self>(&dh);
 
-        AnvilState {
+        BuedchenState {
             backend_data,
             display_handle: dh,
             socket_name,

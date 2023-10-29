@@ -1,6 +1,6 @@
 use std::{convert::TryInto, process::Command, sync::atomic::Ordering};
 
-use crate::{focus::FocusTarget, shell::FullscreenSurface, AnvilState};
+use crate::{focus::FocusTarget, shell::FullscreenSurface, BuedchenState};
 
 use crate::udev::UdevData;
 use smithay::backend::renderer::DebugFlags;
@@ -60,7 +60,7 @@ use smithay::{
     },
 };
 
-impl<BackendData: Backend> AnvilState<BackendData> {
+impl<BackendData: Backend> BuedchenState<BackendData> {
     fn process_common_key_action(&mut self, action: KeyAction) {
         match action {
             KeyAction::None => (),
@@ -402,7 +402,7 @@ impl<BackendData: Backend> AnvilState<BackendData> {
     }
 }
 
-impl<Backend: crate::state::Backend> AnvilState<Backend> {
+impl<Backend: crate::state::Backend> BuedchenState<Backend> {
     pub fn process_input_event_windowed<B: InputBackend>(
         &mut self,
         dh: &DisplayHandle,
@@ -530,7 +530,7 @@ impl<Backend: crate::state::Backend> AnvilState<Backend> {
     }
 }
 
-impl AnvilState<UdevData> {
+impl BuedchenState<UdevData> {
     pub fn process_input_event<B: InputBackend>(
         &mut self,
         dh: &DisplayHandle,

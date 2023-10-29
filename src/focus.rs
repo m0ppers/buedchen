@@ -17,7 +17,7 @@ pub use smithay::{
 
 use crate::{
     shell::WindowElement,
-    state::{AnvilState, Backend},
+    state::{Backend, BuedchenState},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -43,11 +43,11 @@ impl From<FocusTarget> for WlSurface {
     }
 }
 
-impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarget {
+impl<BackendData: Backend> PointerTarget<BuedchenState<BackendData>> for FocusTarget {
     fn enter(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &MotionEvent,
     ) {
         match self {
@@ -58,8 +58,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn motion(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &MotionEvent,
     ) {
         match self {
@@ -70,8 +70,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn relative_motion(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &RelativeMotionEvent,
     ) {
         match self {
@@ -86,8 +86,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn button(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &ButtonEvent,
     ) {
         match self {
@@ -98,8 +98,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn axis(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         frame: AxisFrame,
     ) {
         match self {
@@ -108,7 +108,11 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
             FocusTarget::Popup(p) => PointerTarget::axis(p.wl_surface(), seat, data, frame),
         }
     }
-    fn frame(&self, seat: &Seat<AnvilState<BackendData>>, data: &mut AnvilState<BackendData>) {
+    fn frame(
+        &self,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
+    ) {
         match self {
             FocusTarget::Window(w) => PointerTarget::frame(w, seat, data),
             FocusTarget::LayerSurface(l) => PointerTarget::frame(l, seat, data),
@@ -117,8 +121,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn leave(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         serial: Serial,
         time: u32,
     ) {
@@ -130,8 +134,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn gesture_swipe_begin(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &GestureSwipeBeginEvent,
     ) {
         match self {
@@ -146,8 +150,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn gesture_swipe_update(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &GestureSwipeUpdateEvent,
     ) {
         match self {
@@ -162,8 +166,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn gesture_swipe_end(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &GestureSwipeEndEvent,
     ) {
         match self {
@@ -176,8 +180,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn gesture_pinch_begin(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &GesturePinchBeginEvent,
     ) {
         match self {
@@ -192,8 +196,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn gesture_pinch_update(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &GesturePinchUpdateEvent,
     ) {
         match self {
@@ -208,8 +212,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn gesture_pinch_end(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &GesturePinchEndEvent,
     ) {
         match self {
@@ -222,8 +226,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn gesture_hold_begin(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &GestureHoldBeginEvent,
     ) {
         match self {
@@ -236,8 +240,8 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
     fn gesture_hold_end(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         event: &GestureHoldEndEvent,
     ) {
         match self {
@@ -250,11 +254,11 @@ impl<BackendData: Backend> PointerTarget<AnvilState<BackendData>> for FocusTarge
     }
 }
 
-impl<BackendData: Backend> KeyboardTarget<AnvilState<BackendData>> for FocusTarget {
+impl<BackendData: Backend> KeyboardTarget<BuedchenState<BackendData>> for FocusTarget {
     fn enter(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         keys: Vec<KeysymHandle<'_>>,
         serial: Serial,
     ) {
@@ -268,8 +272,8 @@ impl<BackendData: Backend> KeyboardTarget<AnvilState<BackendData>> for FocusTarg
     }
     fn leave(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         serial: Serial,
     ) {
         match self {
@@ -280,8 +284,8 @@ impl<BackendData: Backend> KeyboardTarget<AnvilState<BackendData>> for FocusTarg
     }
     fn key(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         key: KeysymHandle<'_>,
         state: KeyState,
         serial: Serial,
@@ -299,8 +303,8 @@ impl<BackendData: Backend> KeyboardTarget<AnvilState<BackendData>> for FocusTarg
     }
     fn modifiers(
         &self,
-        seat: &Seat<AnvilState<BackendData>>,
-        data: &mut AnvilState<BackendData>,
+        seat: &Seat<BuedchenState<BackendData>>,
+        data: &mut BuedchenState<BackendData>,
         modifiers: ModifiersState,
         serial: Serial,
     ) {

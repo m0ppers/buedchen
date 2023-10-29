@@ -137,6 +137,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "buedchen"
+version = "0.0.1"
+dependencies = [
+ "bitflags 2.4.1",
+ "fps_ticker",
+ "image",
+ "profiling",
+ "puffin_http",
+ "rand",
+ "renderdoc",
+ "smithay",
+ "smithay-drm-extras",
+ "thiserror",
+ "tracing",
+ "tracing-subscriber",
+ "xcursor",
+ "xkbcommon 0.6.0",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1622,26 +1642,6 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log",
-]
-
-[[package]]
-name = "trinkhalle"
-version = "0.0.1"
-dependencies = [
- "bitflags 2.4.1",
- "fps_ticker",
- "image",
- "profiling",
- "puffin_http",
- "rand",
- "renderdoc",
- "smithay",
- "smithay-drm-extras",
- "thiserror",
- "tracing",
- "tracing-subscriber",
- "xcursor",
- "xkbcommon 0.6.0",
 ]
 
 [[package]]

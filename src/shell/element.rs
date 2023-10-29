@@ -34,7 +34,7 @@ use smithay::{
     },
 };
 
-use crate::AnvilState;
+use crate::BuedchenState;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct WindowElement(pub Window);
@@ -113,54 +113,54 @@ impl IsAlive for WindowElement {
     }
 }
 
-impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for WindowElement {
+impl<Backend: crate::state::Backend> PointerTarget<BuedchenState<Backend>> for WindowElement {
     fn enter(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &MotionEvent,
     ) {
         PointerTarget::enter(&self.0, seat, data, event)
     }
     fn motion(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &MotionEvent,
     ) {
         PointerTarget::motion(&self.0, seat, data, event)
     }
     fn relative_motion(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &RelativeMotionEvent,
     ) {
         PointerTarget::relative_motion(&self.0, seat, data, event)
     }
     fn button(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &ButtonEvent,
     ) {
         PointerTarget::button(&self.0, seat, data, event)
     }
     fn axis(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         frame: AxisFrame,
     ) {
         PointerTarget::axis(&self.0, seat, data, frame)
     }
-    fn frame(&self, seat: &Seat<AnvilState<Backend>>, data: &mut AnvilState<Backend>) {
+    fn frame(&self, seat: &Seat<BuedchenState<Backend>>, data: &mut BuedchenState<Backend>) {
         PointerTarget::frame(&self.0, seat, data)
     }
     fn leave(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         serial: Serial,
         time: u32,
     ) {
@@ -168,75 +168,75 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
     }
     fn gesture_swipe_begin(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &GestureSwipeBeginEvent,
     ) {
         PointerTarget::gesture_swipe_begin(&self.0, seat, data, event)
     }
     fn gesture_swipe_update(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &GestureSwipeUpdateEvent,
     ) {
         PointerTarget::gesture_swipe_update(&self.0, seat, data, event)
     }
     fn gesture_swipe_end(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &GestureSwipeEndEvent,
     ) {
         PointerTarget::gesture_swipe_end(&self.0, seat, data, event)
     }
     fn gesture_pinch_begin(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &GesturePinchBeginEvent,
     ) {
         PointerTarget::gesture_pinch_begin(&self.0, seat, data, event)
     }
     fn gesture_pinch_update(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &GesturePinchUpdateEvent,
     ) {
         PointerTarget::gesture_pinch_update(&self.0, seat, data, event)
     }
     fn gesture_pinch_end(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &GesturePinchEndEvent,
     ) {
         PointerTarget::gesture_pinch_end(&self.0, seat, data, event)
     }
     fn gesture_hold_begin(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &GestureHoldBeginEvent,
     ) {
         PointerTarget::gesture_hold_begin(&self.0, seat, data, event)
     }
     fn gesture_hold_end(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         event: &GestureHoldEndEvent,
     ) {
         PointerTarget::gesture_hold_end(&self.0, seat, data, event)
     }
 }
 
-impl<Backend: crate::state::Backend> KeyboardTarget<AnvilState<Backend>> for WindowElement {
+impl<Backend: crate::state::Backend> KeyboardTarget<BuedchenState<Backend>> for WindowElement {
     fn enter(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         keys: Vec<KeysymHandle<'_>>,
         serial: Serial,
     ) {
@@ -244,16 +244,16 @@ impl<Backend: crate::state::Backend> KeyboardTarget<AnvilState<Backend>> for Win
     }
     fn leave(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         serial: Serial,
     ) {
         KeyboardTarget::leave(&self.0, seat, data, serial)
     }
     fn key(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         key: KeysymHandle<'_>,
         state: KeyState,
         serial: Serial,
@@ -263,8 +263,8 @@ impl<Backend: crate::state::Backend> KeyboardTarget<AnvilState<Backend>> for Win
     }
     fn modifiers(
         &self,
-        seat: &Seat<AnvilState<Backend>>,
-        data: &mut AnvilState<Backend>,
+        seat: &Seat<BuedchenState<Backend>>,
+        data: &mut BuedchenState<Backend>,
         modifiers: ModifiersState,
         serial: Serial,
     ) {

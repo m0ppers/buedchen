@@ -43,7 +43,7 @@ use smithay::{
 };
 use tracing::{error, info, warn};
 
-use crate::state::{post_repaint, take_presentation_feedback, AnvilState, Backend, CalloopData};
+use crate::state::{post_repaint, take_presentation_feedback, Backend, BuedchenState, CalloopData};
 use crate::{drawing::*, render::*};
 
 pub const OUTPUT_NAME: &str = "winit";
@@ -57,7 +57,7 @@ pub struct WinitData {
     pub fps: fps_ticker::Fps,
 }
 
-impl DmabufHandler for AnvilState<WinitData> {
+impl DmabufHandler for BuedchenState<WinitData> {
     fn dmabuf_state(&mut self) -> &mut DmabufState {
         &mut self.backend_data.dmabuf_state.0
     }
@@ -75,7 +75,7 @@ impl DmabufHandler for AnvilState<WinitData> {
             .map_err(|_| ImportError::Failed)
     }
 }
-delegate_dmabuf!(AnvilState<WinitData>);
+delegate_dmabuf!(BuedchenState<WinitData>);
 
 impl Backend for WinitData {
     fn seat_name(&self) -> String {
@@ -115,7 +115,7 @@ pub fn run_winit() {
             model: "Winit".into(),
         },
     );
-    let _global = output.create_global::<AnvilState<WinitData>>(&display.handle());
+    let _global = output.create_global::<BuedchenState<WinitData>>(&display.handle());
     output.change_current_state(
         Some(mode),
         Some(Transform::Flipped180),
@@ -170,7 +170,7 @@ pub fn run_winit() {
     let dmabuf_state = if let Some(default_feedback) = dmabuf_default_feedback {
         let mut dmabuf_state = DmabufState::new();
         let dmabuf_global = dmabuf_state
-            .create_global_with_default_feedback::<AnvilState<WinitData>>(
+            .create_global_with_default_feedback::<BuedchenState<WinitData>>(
                 &display.handle(),
                 &default_feedback,
             );
@@ -178,8 +178,8 @@ pub fn run_winit() {
     } else {
         let dmabuf_formats = backend.renderer().dmabuf_formats().collect::<Vec<_>>();
         let mut dmabuf_state = DmabufState::new();
-        let dmabuf_global =
-            dmabuf_state.create_global::<AnvilState<WinitData>>(&display.handle(), dmabuf_formats);
+        let dmabuf_global = dmabuf_state
+            .create_global::<BuedchenState<WinitData>>(&display.handle(), dmabuf_formats);
         (dmabuf_state, dmabuf_global, None)
     };
 
@@ -203,7 +203,7 @@ pub fn run_winit() {
             fps: fps_ticker::Fps::default(),
         }
     };
-    let mut state = AnvilState::init(display, event_loop.handle(), data, true);
+    let mut state = BuedchenState::init(display, event_loop.handle(), data, true);
     state
         .shm_state
         .update_formats(state.backend_data.backend.renderer().shm_formats());
