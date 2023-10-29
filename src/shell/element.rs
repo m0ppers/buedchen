@@ -37,9 +37,7 @@ use smithay::{
 use crate::AnvilState;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum WindowElement {
-    Wayland(Window),
-}
+pub struct WindowElement(pub Window);
 
 impl WindowElement {
     pub fn surface_under(
@@ -47,18 +45,14 @@ impl WindowElement {
         location: Point<f64, Logical>,
         window_type: WindowSurfaceType,
     ) -> Option<(WlSurface, Point<i32, Logical>)> {
-        match self {
-            WindowElement::Wayland(w) => w.surface_under(location, window_type),
-        }
+        self.0.surface_under(location, window_type)
     }
 
     pub fn with_surfaces<F>(&self, processor: F)
     where
         F: FnMut(&WlSurface, &WlSurfaceData) + Copy,
     {
-        match self {
-            WindowElement::Wayland(w) => w.with_surfaces(processor),
-        }
+        self.0.with_surfaces(processor)
     }
 
     pub fn send_frame<T, F>(
@@ -71,11 +65,8 @@ impl WindowElement {
         T: Into<Duration>,
         F: FnMut(&WlSurface, &WlSurfaceData) -> Option<Output> + Copy,
     {
-        match self {
-            WindowElement::Wayland(w) => {
-                w.send_frame(output, time, throttle, primary_scan_out_output)
-            }
-        }
+        self.0
+            .send_frame(output, time, throttle, primary_scan_out_output)
     }
 
     pub fn send_dmabuf_feedback<'a, P, F>(
@@ -87,11 +78,8 @@ impl WindowElement {
         P: FnMut(&WlSurface, &WlSurfaceData) -> Option<Output> + Copy,
         F: Fn(&WlSurface, &WlSurfaceData) -> &'a DmabufFeedback + Copy,
     {
-        match self {
-            WindowElement::Wayland(w) => {
-                w.send_dmabuf_feedback(output, primary_scan_out_output, select_dmabuf_feedback)
-            }
-        }
+        self.0
+            .send_dmabuf_feedback(output, primary_scan_out_output, select_dmabuf_feedback)
     }
 
     pub fn take_presentation_feedback<F1, F2>(
@@ -103,37 +91,25 @@ impl WindowElement {
         F1: FnMut(&WlSurface, &WlSurfaceData) -> Option<Output> + Copy,
         F2: FnMut(&WlSurface, &WlSurfaceData) -> wp_presentation_feedback::Kind + Copy,
     {
-        match self {
-            WindowElement::Wayland(w) => w.take_presentation_feedback(
-                output_feedback,
-                primary_scan_out_output,
-                presentation_feedback_flags,
-            ),
-        }
-    }
-
-    pub fn is_wayland(&self) -> bool {
-        matches!(self, WindowElement::Wayland(_))
+        self.0.take_presentation_feedback(
+            output_feedback,
+            primary_scan_out_output,
+            presentation_feedback_flags,
+        )
     }
 
     pub fn wl_surface(&self) -> Option<WlSurface> {
-        match self {
-            WindowElement::Wayland(w) => w.wl_surface(),
-        }
+        self.0.wl_surface()
     }
 
     pub fn user_data(&self) -> &UserDataMap {
-        match self {
-            WindowElement::Wayland(w) => w.user_data(),
-        }
+        self.0.user_data()
     }
 }
 
 impl IsAlive for WindowElement {
     fn alive(&self) -> bool {
-        match self {
-            WindowElement::Wayland(w) => w.alive(),
-        }
+        self.0.alive()
     }
 }
 
@@ -144,9 +120,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &MotionEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::enter(w, seat, data, event),
-        };
+        PointerTarget::enter(&self.0, seat, data, event)
     }
     fn motion(
         &self,
@@ -154,9 +128,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &MotionEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::motion(w, seat, data, event),
-        };
+        PointerTarget::motion(&self.0, seat, data, event)
     }
     fn relative_motion(
         &self,
@@ -164,9 +136,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &RelativeMotionEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::relative_motion(w, seat, data, event),
-        }
+        PointerTarget::relative_motion(&self.0, seat, data, event)
     }
     fn button(
         &self,
@@ -174,9 +144,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &ButtonEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::button(w, seat, data, event),
-        };
+        PointerTarget::button(&self.0, seat, data, event)
     }
     fn axis(
         &self,
@@ -184,14 +152,10 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         frame: AxisFrame,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::axis(w, seat, data, frame),
-        }
+        PointerTarget::axis(&self.0, seat, data, frame)
     }
     fn frame(&self, seat: &Seat<AnvilState<Backend>>, data: &mut AnvilState<Backend>) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::frame(w, seat, data),
-        }
+        PointerTarget::frame(&self.0, seat, data)
     }
     fn leave(
         &self,
@@ -200,9 +164,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         serial: Serial,
         time: u32,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::leave(w, seat, data, serial, time),
-        };
+        PointerTarget::leave(&self.0, seat, data, serial, time)
     }
     fn gesture_swipe_begin(
         &self,
@@ -210,9 +172,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &GestureSwipeBeginEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::gesture_swipe_begin(w, seat, data, event),
-        }
+        PointerTarget::gesture_swipe_begin(&self.0, seat, data, event)
     }
     fn gesture_swipe_update(
         &self,
@@ -220,9 +180,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &GestureSwipeUpdateEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::gesture_swipe_update(w, seat, data, event),
-        }
+        PointerTarget::gesture_swipe_update(&self.0, seat, data, event)
     }
     fn gesture_swipe_end(
         &self,
@@ -230,9 +188,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &GestureSwipeEndEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::gesture_swipe_end(w, seat, data, event),
-        }
+        PointerTarget::gesture_swipe_end(&self.0, seat, data, event)
     }
     fn gesture_pinch_begin(
         &self,
@@ -240,9 +196,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &GesturePinchBeginEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::gesture_pinch_begin(w, seat, data, event),
-        }
+        PointerTarget::gesture_pinch_begin(&self.0, seat, data, event)
     }
     fn gesture_pinch_update(
         &self,
@@ -250,9 +204,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &GesturePinchUpdateEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::gesture_pinch_update(w, seat, data, event),
-        }
+        PointerTarget::gesture_pinch_update(&self.0, seat, data, event)
     }
     fn gesture_pinch_end(
         &self,
@@ -260,9 +212,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &GesturePinchEndEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::gesture_pinch_end(w, seat, data, event),
-        }
+        PointerTarget::gesture_pinch_end(&self.0, seat, data, event)
     }
     fn gesture_hold_begin(
         &self,
@@ -270,9 +220,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &GestureHoldBeginEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::gesture_hold_begin(w, seat, data, event),
-        }
+        PointerTarget::gesture_hold_begin(&self.0, seat, data, event)
     }
     fn gesture_hold_end(
         &self,
@@ -280,9 +228,7 @@ impl<Backend: crate::state::Backend> PointerTarget<AnvilState<Backend>> for Wind
         data: &mut AnvilState<Backend>,
         event: &GestureHoldEndEvent,
     ) {
-        match self {
-            WindowElement::Wayland(w) => PointerTarget::gesture_hold_end(w, seat, data, event),
-        }
+        PointerTarget::gesture_hold_end(&self.0, seat, data, event)
     }
 }
 
@@ -294,9 +240,7 @@ impl<Backend: crate::state::Backend> KeyboardTarget<AnvilState<Backend>> for Win
         keys: Vec<KeysymHandle<'_>>,
         serial: Serial,
     ) {
-        match self {
-            WindowElement::Wayland(w) => KeyboardTarget::enter(w, seat, data, keys, serial),
-        }
+        KeyboardTarget::enter(&self.0, seat, data, keys, serial)
     }
     fn leave(
         &self,
@@ -304,9 +248,7 @@ impl<Backend: crate::state::Backend> KeyboardTarget<AnvilState<Backend>> for Win
         data: &mut AnvilState<Backend>,
         serial: Serial,
     ) {
-        match self {
-            WindowElement::Wayland(w) => KeyboardTarget::leave(w, seat, data, serial),
-        }
+        KeyboardTarget::leave(&self.0, seat, data, serial)
     }
     fn key(
         &self,
@@ -317,11 +259,7 @@ impl<Backend: crate::state::Backend> KeyboardTarget<AnvilState<Backend>> for Win
         serial: Serial,
         time: u32,
     ) {
-        match self {
-            WindowElement::Wayland(w) => {
-                KeyboardTarget::key(w, seat, data, key, state, serial, time)
-            }
-        }
+        KeyboardTarget::key(&self.0, seat, data, key, state, serial, time)
     }
     fn modifiers(
         &self,
@@ -330,56 +268,36 @@ impl<Backend: crate::state::Backend> KeyboardTarget<AnvilState<Backend>> for Win
         modifiers: ModifiersState,
         serial: Serial,
     ) {
-        match self {
-            WindowElement::Wayland(w) => {
-                KeyboardTarget::modifiers(w, seat, data, modifiers, serial)
-            }
-        }
+        KeyboardTarget::modifiers(&self.0, seat, data, modifiers, serial)
     }
 }
 
 impl SpaceElement for WindowElement {
     fn geometry(&self) -> Rectangle<i32, Logical> {
-        match self {
-            WindowElement::Wayland(w) => SpaceElement::geometry(w),
-        }
+        SpaceElement::geometry(&self.0)
     }
     fn bbox(&self) -> Rectangle<i32, Logical> {
-        match self {
-            WindowElement::Wayland(w) => SpaceElement::bbox(w),
-        }
+        SpaceElement::bbox(&self.0)
     }
     fn is_in_input_region(&self, point: &Point<f64, Logical>) -> bool {
-        match self {
-            WindowElement::Wayland(w) => SpaceElement::is_in_input_region(w, point),
-        }
+        SpaceElement::is_in_input_region(&self.0, point)
     }
     fn z_index(&self) -> u8 {
-        match self {
-            WindowElement::Wayland(w) => SpaceElement::z_index(w),
-        }
+        SpaceElement::z_index(&self.0)
     }
 
     fn set_activate(&self, activated: bool) {
-        match self {
-            WindowElement::Wayland(w) => SpaceElement::set_activate(w, activated),
-        }
+        SpaceElement::set_activate(&self.0, activated)
     }
     fn output_enter(&self, output: &Output, overlap: Rectangle<i32, Logical>) {
-        match self {
-            WindowElement::Wayland(w) => SpaceElement::output_enter(w, output, overlap),
-        }
+        SpaceElement::output_enter(&self.0, output, overlap)
     }
     fn output_leave(&self, output: &Output) {
-        match self {
-            WindowElement::Wayland(w) => SpaceElement::output_leave(w, output),
-        }
+        SpaceElement::output_leave(&self.0, output)
     }
     #[profiling::function]
     fn refresh(&self) {
-        match self {
-            WindowElement::Wayland(w) => SpaceElement::refresh(w),
-        }
+        SpaceElement::refresh(&self.0)
     }
 }
 
@@ -413,11 +331,9 @@ where
         scale: Scale<f64>,
         alpha: f32,
     ) -> Vec<C> {
-        match self {
-            WindowElement::Wayland(xdg) => AsRenderElements::<R>::render_elements::<
-                WindowRenderElement<R>,
-            >(xdg, renderer, location, scale, alpha),
-        }
+        AsRenderElements::<R>::render_elements::<WindowRenderElement<R>>(
+            &self.0, renderer, location, scale, alpha,
+        )
         .into_iter()
         .map(C::from)
         .collect()

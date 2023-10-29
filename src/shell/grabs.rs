@@ -291,16 +291,12 @@ impl<BackendData: Backend> PointerGrab<AnvilState<BackendData>> for ResizeSurfac
 
         self.last_window_size = (new_window_width, new_window_height).into();
 
-        match &self.window {
-            WindowElement::Wayland(w) => {
-                let xdg = w.toplevel();
-                xdg.with_pending_state(|state| {
-                    state.states.set(xdg_toplevel::State::Resizing);
-                    state.size = Some(self.last_window_size);
-                });
-                xdg.send_pending_configure();
-            }
-        }
+        let xdg = &self.window.0.toplevel();
+        xdg.with_pending_state(|state| {
+            state.states.set(xdg_toplevel::State::Resizing);
+            state.size = Some(self.last_window_size);
+        });
+        xdg.send_pending_configure();
     }
 
     fn relative_motion(
@@ -329,45 +325,40 @@ impl<BackendData: Backend> PointerGrab<AnvilState<BackendData>> for ResizeSurfac
                 return;
             }
 
-            match &self.window {
-                WindowElement::Wayland(w) => {
-                    let xdg = w.toplevel();
-                    xdg.with_pending_state(|state| {
-                        state.states.unset(xdg_toplevel::State::Resizing);
-                        state.size = Some(self.last_window_size);
-                    });
-                    xdg.send_pending_configure();
-                    if self.edges.intersects(ResizeEdge::TOP_LEFT) {
-                        let geometry = self.window.geometry();
-                        let mut location = data.space.element_location(&self.window).unwrap();
+            let xdg = self.window.0.toplevel();
+            xdg.with_pending_state(|state| {
+                state.states.unset(xdg_toplevel::State::Resizing);
+                state.size = Some(self.last_window_size);
+            });
+            xdg.send_pending_configure();
+            if self.edges.intersects(ResizeEdge::TOP_LEFT) {
+                let geometry = self.window.geometry();
+                let mut location = data.space.element_location(&self.window).unwrap();
 
-                        if self.edges.intersects(ResizeEdge::LEFT) {
-                            location.x = self.initial_window_location.x
-                                + (self.initial_window_size.w - geometry.size.w);
-                        }
-                        if self.edges.intersects(ResizeEdge::TOP) {
-                            location.y = self.initial_window_location.y
-                                + (self.initial_window_size.h - geometry.size.h);
-                        }
-
-                        data.space.map_element(self.window.clone(), location, true);
-                    }
-
-                    with_states(&self.window.wl_surface().unwrap(), |states| {
-                        let mut data = states
-                            .data_map
-                            .get::<RefCell<SurfaceData>>()
-                            .unwrap()
-                            .borrow_mut();
-                        if let ResizeState::Resizing(resize_data) = data.resize_state {
-                            data.resize_state =
-                                ResizeState::WaitingForFinalAck(resize_data, event.serial);
-                        } else {
-                            panic!("invalid resize state: {:?}", data.resize_state);
-                        }
-                    });
+                if self.edges.intersects(ResizeEdge::LEFT) {
+                    location.x = self.initial_window_location.x
+                        + (self.initial_window_size.w - geometry.size.w);
                 }
+                if self.edges.intersects(ResizeEdge::TOP) {
+                    location.y = self.initial_window_location.y
+                        + (self.initial_window_size.h - geometry.size.h);
+                }
+
+                data.space.map_element(self.window.clone(), location, true);
             }
+
+            with_states(&self.window.wl_surface().unwrap(), |states| {
+                let mut data = states
+                    .data_map
+                    .get::<RefCell<SurfaceData>>()
+                    .unwrap()
+                    .borrow_mut();
+                if let ResizeState::Resizing(resize_data) = data.resize_state {
+                    data.resize_state = ResizeState::WaitingForFinalAck(resize_data, event.serial);
+                } else {
+                    panic!("invalid resize state: {:?}", data.resize_state);
+                }
+            });
         }
     }
 

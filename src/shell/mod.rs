@@ -143,8 +143,8 @@ impl<BackendData: Backend> CompositorHandler for AnvilState<BackendData> {
             while let Some(parent) = get_parent(&root) {
                 root = parent;
             }
-            if let Some(WindowElement::Wayland(window)) = self.window_for_surface(&root) {
-                window.on_commit();
+            if let Some(window) = self.window_for_surface(&root) {
+                window.0.on_commit();
             }
         }
         self.popups.commit(surface);
@@ -214,7 +214,6 @@ fn ensure_initial_configure(
     space: &mut Space<WindowElement>,
     popups: &mut PopupManager,
 ) {
-    info!("ensure_initial_configure");
     with_surface_tree_upward(
         surface,
         (),
@@ -233,20 +232,17 @@ fn ensure_initial_configure(
         .cloned()
     {
         // send the initial configure if relevant
-        #[allow(irrefutable_let_patterns)]
-        if let WindowElement::Wayland(ref toplevel) = window {
-            let initial_configure_sent = with_states(surface, |states| {
-                states
-                    .data_map
-                    .get::<XdgToplevelSurfaceData>()
-                    .unwrap()
-                    .lock()
-                    .unwrap()
-                    .initial_configure_sent
-            });
-            if !initial_configure_sent {
-                toplevel.toplevel().send_configure();
-            }
+        let initial_configure_sent = with_states(surface, |states| {
+            states
+                .data_map
+                .get::<XdgToplevelSurfaceData>()
+                .unwrap()
+                .lock()
+                .unwrap()
+                .initial_configure_sent
+        });
+        if !initial_configure_sent {
+            window.0.toplevel().send_configure();
         }
 
         with_states(surface, |states| {
@@ -331,14 +327,12 @@ fn resize_toplevel_windows(space: &Space<WindowElement>, map: &LayerMap, output:
     let zone = map.non_exclusive_zone();
     let rect = Rectangle::from_loc_and_size(geo.loc + zone.loc, zone.size);
     space.elements_for_output(output).for_each(|window| {
-        #[allow(irrefutable_let_patterns)]
-        if let WindowElement::Wayland(ref toplevel) = window {
-            toplevel.toplevel().with_pending_state(|state| {
-                state.bounds = Some(rect.size);
-                state.size = Some(rect.size);
-            });
-            toplevel.toplevel().send_configure();
-        }
+        let toplevel = &window.0;
+        toplevel.toplevel().with_pending_state(|state| {
+            state.bounds = Some(rect.size);
+            state.size = Some(rect.size);
+        });
+        toplevel.toplevel().send_configure();
     });
 }
 
@@ -364,13 +358,10 @@ fn place_new_window(
         .unwrap_or_else(|| Rectangle::from_loc_and_size((0, 0), (800, 800)));
 
     // set the initial toplevel bounds
-    #[allow(irrefutable_let_patterns)]
-    if let WindowElement::Wayland(window) = window {
-        window.toplevel().with_pending_state(|state| {
-            state.bounds = Some(output_geometry.size);
-            state.size = Some(output_geometry.size);
-        });
-    }
+    window.0.toplevel().with_pending_state(|state| {
+        state.bounds = Some(output_geometry.size);
+        state.size = Some(output_geometry.size);
+    });
     space.map_element(
         window.clone(),
         (output_geometry.loc.x, output_geometry.loc.y),
@@ -378,32 +369,7 @@ fn place_new_window(
     );
 }
 
-pub fn fixup_window_positions(space: &mut Space<WindowElement>, output: &Output) {
-    let window_geometries = space
-        .elements_for_output(output)
-        .map(|window| {
-            let output_geometry = {
-                let geo = space.output_geometry(&output).unwrap();
-                let map = layer_map_for_output(&output);
-                let zone = map.non_exclusive_zone();
-                Rectangle::from_loc_and_size(geo.loc + zone.loc, zone.size)
-            };
-            info!("output_geometry: {:?}", output_geometry);
-            // set the initial toplevel bounds
-            #[allow(irrefutable_let_patterns)]
-            if let WindowElement::Wayland(window) = window {
-                window.toplevel().with_pending_state(|state| {
-                    state.bounds = Some(output_geometry.size);
-                    state.size = Some(output_geometry.size);
-                });
-            }
-            (window.clone(), output_geometry.loc)
-        })
-        .collect::<Vec<_>>();
-}
-
 pub fn fixup_positions(space: &mut Space<WindowElement>, pointer_location: Point<f64, Logical>) {
-    info!("fixi");
     // fixup outputs
     let mut offset = Point::<i32, Logical>::from((0, 0));
     for output in space.outputs().cloned().collect::<Vec<_>>().into_iter() {

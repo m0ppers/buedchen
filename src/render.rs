@@ -19,9 +19,8 @@ use smithay::{
         },
     },
     output::Output,
-    utils::{Point, Rectangle, Scale, Size},
+    utils::{Point, Rectangle, Size},
 };
-use tracing::info;
 
 #[cfg(feature = "debug")]
 use crate::drawing::FpsElement;
