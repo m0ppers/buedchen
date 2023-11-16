@@ -35,7 +35,7 @@ use smithay::{
 use smithay::backend::input::AbsolutePositionEvent;
 
 use smithay::output::Output;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 use crate::state::Backend;
 use smithay::{

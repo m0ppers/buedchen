@@ -1,9 +1,40 @@
-static POSSIBLE_BACKENDS: &[&str] = &[
-    "--winit : Run buedchen as a X11 or Wayland client using winit.",
-    "--tty-udev : Run buedchen as a tty udev client (requires root if without logind).",
-];
+mod client;
+
+use clap::{Parser, ValueEnum};
+use tracing::info;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Backend {
+    Auto,
+    Winit,
+    Tty,
+}
+
+/// A wayland compositor that implements a full screen kiosk shell
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    /// Name of the person to greet
+    #[arg(short, long, value_enum, default_value_t = Backend::Auto)]
+    backend: Backend,
+
+    #[arg(last(true), required(true))]
+    executable: Vec<String>,
+}
+
+fn run_winit(executable: &[String]) {
+    tracing::info!("Starting buedchen with winit backend");
+    buedchen::winit::run_winit(executable);
+}
+
+fn run_udev(executable: &[String]) {
+    tracing::info!("Starting buedchen on a tty using udev");
+    buedchen::udev::run_udev(executable);
+}
 
 fn main() {
+    profiling::register_thread!("Main Thread");
+
     if let Ok(env_filter) = tracing_subscriber::EnvFilter::try_from_default_env() {
         tracing_subscriber::fmt()
             .compact()
@@ -13,28 +44,13 @@ fn main() {
         tracing_subscriber::fmt().compact().init();
     }
 
-    profiling::register_thread!("Main Thread");
-
-    let arg = ::std::env::args().nth(1);
-    match arg.as_ref().map(|s| &s[..]) {
-        Some("--winit") => {
-            tracing::info!("Starting buedchen with winit backend");
-            buedchen::winit::run_winit();
-        }
-        Some("--tty-udev") => {
-            tracing::info!("Starting buedchen on a tty using udev");
-            buedchen::udev::run_udev();
-        }
-        Some(other) => {
-            tracing::error!("Unknown backend: {}", other);
-        }
-        None => {
-            println!("USAGE: buedchen --backend");
-            println!();
-            println!("Possible backends are:");
-            for b in POSSIBLE_BACKENDS {
-                println!("\t{}", b);
-            }
-        }
+    let cli = Cli::parse();
+    match cli.backend {
+        Backend::Auto => match std::env::var("WAYLAND_DISPLAY") {
+            Ok(_) => run_winit(&cli.executable),
+            Err(_) => run_udev(&cli.executable),
+        },
+        Backend::Winit => run_winit(&cli.executable),
+        Backend::Tty => run_udev(&cli.executable),
     }
 }

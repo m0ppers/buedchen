@@ -43,6 +43,7 @@ use smithay::{
 };
 use tracing::{error, info, warn};
 
+use crate::client::run_client;
 use crate::state::{post_repaint, take_presentation_feedback, Backend, BuedchenState, CalloopData};
 use crate::{drawing::*, render::*};
 
@@ -87,7 +88,7 @@ impl Backend for WinitData {
     fn early_import(&mut self, _surface: &wl_surface::WlSurface) {}
 }
 
-pub fn run_winit() {
+pub fn run_winit(executable: &[String]) {
     let mut event_loop = EventLoop::try_new().unwrap();
     let display = Display::new().unwrap();
     let mut display_handle = display.handle();
@@ -209,6 +210,23 @@ pub fn run_winit() {
         .update_formats(state.backend_data.backend.renderer().shm_formats());
     state.space.map_output(&output, (0, 0));
 
+    let socket_name = match &state.socket_name {
+        None => {
+            error!("WAYLAND_DISPLAY was not set yet by compositor");
+            return;
+        }
+        Some(socket_name) => socket_name,
+    };
+
+    let client_join_handle = match run_client(executable, &socket_name) {
+        Ok(join_handle) => join_handle,
+        Err(e) => {
+            error!("Couldn't start client: {}", e);
+            return;
+        }
+    };
+    info!("Client started successfully");
+
     info!("Initialization completed, starting the main loop.");
 
     let mut pointer_element = PointerElement::<GlesTexture>::default();
@@ -235,6 +253,27 @@ pub fn run_winit() {
 
         if let PumpStatus::Exit(_) = status {
             state.running.store(false, Ordering::SeqCst);
+            break;
+        }
+
+        if client_join_handle.is_finished() {
+            info!("client has finished. stopping...");
+            match client_join_handle.join() {
+                Ok(client_exit) => match client_exit {
+                    Ok(exit_code) => {
+                        if exit_code.success() {
+                            info!("client exited normally");
+                        } else {
+                            error!("client exited abnormally with code: {}", exit_code);
+                        }
+                    }
+                    Err(e) => error!(
+                        "client exited abnormally and we couldn't get an exit code: {:?}",
+                        e
+                    ),
+                },
+                Err(e) => error!("Couldn't join client thread: {:?}", e),
+            }
             break;
         }
 

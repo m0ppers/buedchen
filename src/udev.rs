@@ -8,7 +8,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::state::SurfaceDmabufFeedback;
+use crate::{client::run_client, state::SurfaceDmabufFeedback};
 use crate::{
     drawing::*,
     render::*,
@@ -197,7 +197,7 @@ impl Backend for UdevData {
     }
 }
 
-pub fn run_udev() {
+pub fn run_udev(executable: &[String]) {
     let mut event_loop = EventLoop::try_new().unwrap();
     let display = Display::new().unwrap();
     let mut display_handle = display.handle();
@@ -467,6 +467,23 @@ pub fn run_udev() {
         })
         .unwrap();
 
+    let socket_name = match &state.socket_name {
+        None => {
+            error!("WAYLAND_DISPLAY was not set yet by compositor");
+            return;
+        }
+        Some(socket_name) => socket_name,
+    };
+
+    let client_join_handle = match run_client(executable, &socket_name) {
+        Ok(join_handle) => join_handle,
+        Err(e) => {
+            error!("Couldn't start client: {}", e);
+            return;
+        }
+    };
+    info!("Client started successfully");
+
     /*
      * And run our loop
      */
@@ -488,6 +505,27 @@ pub fn run_udev() {
             state.space.refresh();
             state.popups.cleanup();
             display_handle.flush_clients().unwrap();
+        }
+
+        if client_join_handle.is_finished() {
+            info!("client has finished. stopping...");
+            match client_join_handle.join() {
+                Ok(client_exit) => match client_exit {
+                    Ok(exit_code) => {
+                        if exit_code.success() {
+                            info!("client exited normally");
+                        } else {
+                            error!("client exited abnormally with code: {}", exit_code);
+                        }
+                    }
+                    Err(e) => error!(
+                        "client exited abnormally and we couldn't get an exit code: {:?}",
+                        e
+                    ),
+                },
+                Err(e) => error!("Couldn't join client thread: {:?}", e),
+            }
+            break;
         }
     }
 }
