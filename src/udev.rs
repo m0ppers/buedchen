@@ -8,7 +8,9 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{client::run_client, state::SurfaceDmabufFeedback};
+use crate::client::run_client;
+
+use crate::state::SurfaceDmabufFeedback;
 use crate::{
     drawing::*,
     render::*,

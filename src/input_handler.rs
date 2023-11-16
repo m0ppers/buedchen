@@ -34,8 +34,7 @@ use smithay::{
 
 use smithay::backend::input::AbsolutePositionEvent;
 
-use smithay::output::Output;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 
 use crate::state::Backend;
 use smithay::{
@@ -399,134 +398,6 @@ impl<BackendData: Backend> BuedchenState<BackendData> {
             pointer.axis(self, frame);
             pointer.frame(self);
         }
-    }
-}
-
-impl<Backend: crate::state::Backend> BuedchenState<Backend> {
-    pub fn process_input_event_windowed<B: InputBackend>(
-        &mut self,
-        dh: &DisplayHandle,
-        event: InputEvent<B>,
-        output_name: &str,
-    ) {
-        match event {
-            InputEvent::Keyboard { event } => match self.keyboard_key_to_action::<B>(event) {
-                KeyAction::ScaleUp => {
-                    let output = self
-                        .space
-                        .outputs()
-                        .find(|o| o.name() == output_name)
-                        .unwrap()
-                        .clone();
-
-                    let current_scale = output.current_scale().fractional_scale();
-                    let new_scale = current_scale + 0.25;
-                    output.change_current_state(
-                        None,
-                        None,
-                        Some(Scale::Fractional(new_scale)),
-                        None,
-                    );
-
-                    crate::shell::fixup_positions(&mut self.space, self.pointer.current_location());
-                    self.backend_data.reset_buffers(&output);
-                }
-
-                KeyAction::ScaleDown => {
-                    let output = self
-                        .space
-                        .outputs()
-                        .find(|o| o.name() == output_name)
-                        .unwrap()
-                        .clone();
-
-                    let current_scale = output.current_scale().fractional_scale();
-                    let new_scale = f64::max(1.0, current_scale - 0.25);
-                    output.change_current_state(
-                        None,
-                        None,
-                        Some(Scale::Fractional(new_scale)),
-                        None,
-                    );
-
-                    crate::shell::fixup_positions(&mut self.space, self.pointer.current_location());
-                    self.backend_data.reset_buffers(&output);
-                }
-
-                KeyAction::RotateOutput => {
-                    let output = self
-                        .space
-                        .outputs()
-                        .find(|o| o.name() == output_name)
-                        .unwrap()
-                        .clone();
-
-                    let current_transform = output.current_transform();
-                    let new_transform = match current_transform {
-                        Transform::Normal => Transform::_90,
-                        Transform::_90 => Transform::_180,
-                        Transform::_180 => Transform::_270,
-                        Transform::_270 => Transform::Normal,
-                        _ => Transform::Normal,
-                    };
-                    output.change_current_state(None, Some(new_transform), None, None);
-                    crate::shell::fixup_positions(&mut self.space, self.pointer.current_location());
-                    self.backend_data.reset_buffers(&output);
-                }
-
-                action => match action {
-                    KeyAction::None
-                    | KeyAction::Quit
-                    | KeyAction::Run(_)
-                    | KeyAction::TogglePreview
-                    | KeyAction::ToggleDecorations => self.process_common_key_action(action),
-
-                    _ => tracing::warn!(
-                        ?action,
-                        output_name,
-                        "Key action unsupported on on output backend.",
-                    ),
-                },
-            },
-
-            InputEvent::PointerMotionAbsolute { event } => {
-                let output = self
-                    .space
-                    .outputs()
-                    .find(|o| o.name() == output_name)
-                    .unwrap()
-                    .clone();
-                self.on_pointer_move_absolute_windowed::<B>(dh, event, &output)
-            }
-            InputEvent::PointerButton { event } => self.on_pointer_button::<B>(event),
-            InputEvent::PointerAxis { event } => self.on_pointer_axis::<B>(dh, event),
-            _ => (), // other events are not handled in anvil (yet)
-        }
-    }
-
-    fn on_pointer_move_absolute_windowed<B: InputBackend>(
-        &mut self,
-        _dh: &DisplayHandle,
-        evt: B::PointerMotionAbsoluteEvent,
-        output: &Output,
-    ) {
-        let output_geo = self.space.output_geometry(output).unwrap();
-
-        let pos = evt.position_transformed(output_geo.size) + output_geo.loc.to_f64();
-        let serial = SCOUNTER.next_serial();
-
-        let pointer = self.pointer.clone();
-        let under = self.surface_under(pos);
-        pointer.motion(
-            self,
-            under,
-            &MotionEvent {
-                location: pos,
-                serial,
-                time: evt.time_msec(),
-            },
-        );
-        pointer.frame(self);
     }
 }
 
