@@ -24,7 +24,7 @@ use smithay::{
     },
 };
 
-use smithay::backend::input::AbsolutePositionEvent;
+use smithay::backend::input::{AbsolutePositionEvent, TouchEvent as _};
 
 use tracing::{debug, error, info};
 
@@ -326,6 +326,27 @@ impl<BackendData: Backend> BuedchenState<BackendData> {
 }
 
 impl BuedchenState<UdevData> {
+    /// Apply an output transform to a point.
+    fn transform_position<I, E>(&self, event: &E) -> Point<f64, Logical>
+    where
+        E: AbsolutePositionEvent<I>,
+        I: InputBackend,
+    {
+        let max_x = self.space.outputs().fold(0, |acc, o| {
+            acc + self.space.output_geometry(o).unwrap().size.w
+        });
+
+        let max_h_output = self
+            .space
+            .outputs()
+            .max_by_key(|o| self.space.output_geometry(o).unwrap().size.h)
+            .unwrap();
+
+        let max_y = self.space.output_geometry(max_h_output).unwrap().size.h;
+
+        (event.x_transformed(max_x), event.y_transformed(max_y)).into()
+    }
+
     pub fn process_input_event<B: InputBackend>(
         &mut self,
         dh: &DisplayHandle,
@@ -389,10 +410,59 @@ impl BuedchenState<UdevData> {
                     }
                 }
             }
+            InputEvent::TouchDown { event } => {
+                self.on_touch_down::<B>(event);
+            }
+            InputEvent::TouchUp { event } => self.on_touch_up::<B>(event),
+            InputEvent::TouchMotion { event } => self.on_touch_motion::<B>(event),
             _ => {
                 // other events are not handled in anvil (yet)
             }
         }
+    }
+
+    fn on_touch_down<B: InputBackend>(&mut self, evt: B::TouchDownEvent) {
+        let serial = SCOUNTER.next_serial();
+        let position = self.transform_position(&evt);
+
+        let under = self.surface_under(position);
+
+        if let Some((surface, _surface_loc)) = under
+            .as_ref()
+            .and_then(|(target, l)| Some((target.wl_surface()?, l)))
+        {
+            info!("touch down at {:?} with surface", position);
+            self.touch
+                .down(serial, evt.time_msec(), &surface, position, evt.slot());
+        } else {
+            info!("touch down at {:?} without surface", position);
+        }
+        let pointer = self.pointer.clone();
+        let under = self.surface_under(position);
+
+        // just for debug for now
+        pointer.motion(
+            self,
+            under,
+            &MotionEvent {
+                location: position,
+                serial,
+                time: evt.time_msec(),
+            },
+        );
+    }
+
+    fn on_touch_up<B: InputBackend>(&mut self, evt: B::TouchUpEvent) {
+        info!("touch up");
+        let serial = SCOUNTER.next_serial();
+        self.touch.up(serial, evt.time_msec(), evt.slot());
+    }
+
+    fn on_touch_motion<B: InputBackend>(&mut self, evt: B::TouchMotionEvent) {
+        let position = self.transform_position(&evt);
+        info!("touch motion at {:?}", position);
+
+        self.touch.motion(evt.time_msec(), evt.slot(), position);
     }
 
     fn on_pointer_move<B: InputBackend>(

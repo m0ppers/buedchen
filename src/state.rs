@@ -62,7 +62,7 @@ use smithay::{
         pointer_gestures::PointerGesturesState,
         presentation::PresentationState,
         relative_pointer::RelativePointerManagerState,
-        seat::WaylandFocus,
+        seat::{TouchHandle, WaylandFocus},
         security_context::{
             SecurityContext, SecurityContextHandler, SecurityContextListenerSource,
             SecurityContextState,
@@ -154,6 +154,7 @@ pub struct BuedchenState<BackendData: Backend + 'static> {
     pub seat: Seat<BuedchenState<BackendData>>,
     pub clock: Clock<Monotonic>,
     pub pointer: PointerHandle<BuedchenState<BackendData>>,
+    pub touch: TouchHandle,
 
     #[cfg(feature = "debug")]
     pub renderdoc: Option<renderdoc::RenderDoc<renderdoc::V141>>,
@@ -567,6 +568,7 @@ impl<BackendData: Backend + 'static> BuedchenState<BackendData> {
                 // TODO: tablet tools should have their own cursors
                 *cursor_status2.lock().unwrap() = new_status;
             });
+        let touch = seat.add_touch();
 
         let keyboard_shortcuts_inhibit_state = KeyboardShortcutsInhibitState::new::<Self>(&dh);
 
@@ -603,6 +605,7 @@ impl<BackendData: Backend + 'static> BuedchenState<BackendData> {
             #[cfg(feature = "debug")]
             renderdoc: renderdoc::RenderDoc::new().ok(),
             show_window_preview: false,
+            touch,
         }
     }
 }
